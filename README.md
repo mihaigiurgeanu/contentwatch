@@ -1,6 +1,9 @@
 # contentwatch
 
-FIXME: description
+Watch the content of web site pages for changes. When ran first time,
+it will initialize the database of existing web pages, images, documents
+on the web site. On subsequant runs, will update the database with
+current documents and will report what has been changed.
 
 ## Installation
 
