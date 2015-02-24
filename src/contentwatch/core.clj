@@ -21,6 +21,7 @@
         last-session-data (if last-session-id
                             (with-open [data (java.io.PushbackReader. (reader last-session-id))]
                               {:last-session-id last-session-id
+                               :last-session-date (read data)
                                :pevious-session-id (read data)
                                :last-session-data (read data)
                                })
@@ -39,18 +40,18 @@
   (log-csv url status)
   new-session-data)
 
-(defn- make-session-id [data]
-  (sha256 (pr-str data)))
+(defn- make-session-id [data session-date]
+  (sha256 (str session-date (pr-str data))))
 
 (defn- save-session [data prev-session-id session-file-name]
-  (let [session-id (make-session-id data)]
+  (let [session-date (.toString (java.util.Date.))
+        session-id (make-session-id data session-date)]
     (with-open [session-writer (writer session-id)]
       (binding [*out* session-writer]
-        (prn prev-session-id)
-        (prn data)))
+        (pr session-date prev-session-id data)))
     (with-open [session-writer (writer session-file-name)]
       (binding [*out* session-writer]
-        (pr session-id (.toString (java.util.Date.)))))))
+        (pr session-id)))))
 
 (defn -main
   [& args]
