@@ -50,7 +50,7 @@
         (prn data)))
     (with-open [session-writer (writer session-file-name)]
       (binding [*out* session-writer]
-        (pr session-id (.toString java.util.Date.))))))
+        (pr session-id (.toString (java.util.Date.)))))))
 
 (defn -main
   [& args]
