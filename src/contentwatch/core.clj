@@ -1,7 +1,8 @@
 (ns contentwatch.core
   (:use httpcrawler.core
-        [clojure.java.io :only [reader output-stream]]
-        [pandect.algo.sha256 :only [sha256]])
+        [clojure.java.io :only [reader writer]]
+        #_[pandect.algo.sha256 :only [sha256]]
+        [digest :only [sha-256] :rename {sha-256 sha256}])
   (:gen-class))
 
 (def ^{:doc "Configuration file name" :dynamic true}
@@ -43,11 +44,11 @@
 
 (defn- save-session [data prev-session-id session-file-name]
   (let [session-id (make-session-id data)]
-    (with-open [session-output-stream (output-stream session-id)]
-      (binding [*out* session-output-stream]
+    (with-open [session-writer (writer session-id)]
+      (binding [*out* session-writer]
         (prn prev-session-id)
         (prn data)))
-    (with-open [session-output-stream session-file-name]
+    (with-open [session-writer (writer session-file-name)]
       (pr session-id))))
 
 (defn -main
@@ -64,14 +65,14 @@
              error (send new-session-data  just-log-page url "ERROR")
              (let [body-digest (sha256 body)]
                (if (contains? last-session-data url)
-                 (if (= body-digest (last-session-data url)
-                        (send new-session-data register-page url "SAME" body-digest)
-                        (send new-session-data register-page url "CHANGED" body-digest)))
-                 (send new-session-data register-page url "NEW" body-digest)))))
+                 (if (= body-digest (last-session-data url))
+                   (send new-session-data register-page url "SAME" body-digest)
+                   (send new-session-data register-page url "CHANGED" body-digest))
+               (send new-session-data register-page url "NEW" body-digest)))))
          batch-size http-options)))
     (await new-session-data)
       (doseq [old-url (keys last-session-data)]
-        (when-not (contains? @new-session-data url)
-          (log-csv url "DELETED")))
+        (when-not (contains? @new-session-data old-url)
+          (log-csv old-url "DELETED")))
     (save-session @new-session-data last-session-id session-file))
   (shutdown-agents))
