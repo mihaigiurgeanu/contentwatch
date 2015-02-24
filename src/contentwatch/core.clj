@@ -49,7 +49,8 @@
         (prn prev-session-id)
         (prn data)))
     (with-open [session-writer (writer session-file-name)]
-      (pr session-id))))
+      (binding [*out* session-writer]
+        (pr session-id (.toString java.util.Date.))))))
 
 (defn -main
   [& args]
