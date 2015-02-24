@@ -34,7 +34,9 @@
       (doseq [site (line-seq sites)]
         (crawl site
              (fn [url {:keys [status error body opts]}]
-               (if (contains? last-session-data url)
-                 nil
-                 (println (str "\"NEW\",\"" url "\""))))
-             batch-size http-options)))))
+               (cond
+                error (println (str "\"ERROR\",\"" url "\""))
+                (contains? last-session-data url) nil
+                true (println (str "\"NEW\",\"" url "\""))))
+             batch-size http-options))))
+  (shutdown-agents))
