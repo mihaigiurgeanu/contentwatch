@@ -40,12 +40,12 @@
   (log-csv url status)
   new-session-data)
 
-(defn- make-session-id [data session-date]
-  (sha256 (str session-date (pr-str data))))
+(defn- make-session-id [data session-date last-session-id]
+  (sha256 (str session-date last-session-id (pr-str data))))
 
 (defn- save-session [data prev-session-id session-file-name]
   (let [session-date (.toString (java.util.Date.))
-        session-id (make-session-id data session-date)]
+        session-id (make-session-id data session-date last-session-id)]
     (with-open [session-writer (writer session-id)]
       (binding [*out* session-writer]
         (pr session-date prev-session-id data)))
