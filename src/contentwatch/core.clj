@@ -17,17 +17,20 @@
 
 (defn- create-session [session-file-name]
   (let [last-session-id (with-open [session-file (java.io.PushbackReader. (reader session-file-name))]
-                          (read session-file))
-        last-session-data (if last-session-id
-                            (with-open [data (java.io.PushbackReader. (reader last-session-id))]
-                              {:last-session-id last-session-id
-                               :last-session-date (read data)
-                               :pevious-session-id (read data)
-                               :last-session-data (read data)
-                               })
-                            {:previous-session-id nil
-                             :last-session-id nil
-                             :last-session-data {}})]))
+                          (read session-file))]
+    (if last-session-id
+      (with-open [data (java.io.PushbackReader. (reader last-session-id))]
+        (println "last-session-id found: " last-session-id)
+        {:last-session-id last-session-id
+         :last-session-date (read data)
+         :pevious-session-id (read data)
+         :last-session-data (read data)
+         })
+      (do
+        (println "last-session-id not found")
+        {:previous-session-id nil
+         :last-session-id nil
+         :last-session-data {}}))))
 
 (defn- log-csv [url status]
   (println (str "\"" url "\",\"" status "\"")))
@@ -43,12 +46,12 @@
 (defn- make-session-id [data session-date last-session-id]
   (sha256 (str session-date last-session-id (pr-str data))))
 
-(defn- save-session [data prev-session-id session-file-name]
+(defn- save-session [data last-session-id session-file-name]
   (let [session-date (.toString (java.util.Date.))
         session-id (make-session-id data session-date last-session-id)]
     (with-open [session-writer (writer session-id)]
       (binding [*out* session-writer]
-        (pr session-date prev-session-id data)))
+        (pr session-date last-session-id data)))
     (with-open [session-writer (writer session-file-name)]
       (binding [*out* session-writer]
         (pr session-id)))))
